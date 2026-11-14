@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0d9488">
+  <meta name="description" content="HealthMemory — your personal health management dashboard.">
+  <title>HealthMemory | Personal Health OS</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-icon">H</span><span>HealthMemory</span></div>
+    <div class="sidebar-user">
+      <div class="avatar">🧬</div>
+      <div><strong id="sidebarName">My Health</strong><small>Personal health space</small></div>
+    </div>
+    <nav class="navigation">
+            <button class="nav-btn active" data-page="dashboard">🏠 Dashboard</button>
+      <button class="nav-btn" data-page="records">📃 Medical Records</button>
+      <button class="nav-btn" data-page="scanner">📸 Document Scanner</button>
+      <button class="nav-btn" data-page="medicines">💊 Medicines</button>
+      <button class="nav-btn" data-page="appointments">🩺 Appointments</button>
+      <button class="nav-btn" data-page="family">👩‍👧‍👦 Family Members</button>
+      <button class="nav-btn" data-page="timeline">📈 Health Timeline</button>
+    </nav>
+    <div class="nav-label">PERSONAL</div>
+    <nav>
+      <button class="nav-btn" data-page="profile">👤 My Profile</button>
+      <button class="nav-btn" data-page="settings">⚙️ Settings & Backup</button>
+    </nav>
+    <div class="sidebar-bottom"><span class="status-dot"></span> Your health, organized</div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div><span class="eyebrow">HEALTHMEMORY</span><h1 id="pageTitle">Dashboard</h1></div>
+      <button class="icon-btn" id="themeToggle" type="button" title="Toggle theme">☾</button>
+    </header>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <section class="page active" id="page-dashboard">
+        <div class="welcome">
+          <div><span class="eyebrow">YOUR PERSONAL HEALTH SPACE</span>
+            <h2>Welcome back, <span id="welcomeName">there</span> 👋</h2>
+            <p>Keep track of your health information in one place.</p>
+          </div>
+          <button class="btn" data-go="profile">＋ Add health reading</button>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card"><span>Medical Records</span><strong id="statRecords">0</strong><small>Saved records</small></div>
+          <div class="stat-card"><span>Medicines</span><strong id="statMedicines">0</strong><small>Added medicines</small></div>
+          <div class="stat-card"><span>Upcoming Appointments</span><strong id="statAppointments">0</strong><small>Scheduled visits</small></div>
+          <div class="stat-card"><span>Family Members</span><strong id="statFamily">0</strong><small>Profiles added</small></div>
+        </div>
+
+        <div class="panel health-overview-panel">
+          <div class="panel-heading health-chart-heading">
+            <div><h3>Health Overview</h3><p>Track your blood pressure and heart rate over time</p></div>
+            <div class="heart-status"><span class="heartbeat">♥</span><span>Heart rate</span></div>
+          </div>
+          <div class="health-chart-legend">
+            <span><i class="legend-line bp-systolic-line"></i> Systolic BP</span>
+            <span><i class="legend-line bp-diastolic-line"></i> Diastolic BP</span>
+            <span><i class="legend-line heart-rate-line"></i> Heart rate</span>
+          </div>
+          <div class="health-chart-wrap">
+            <canvas id="healthOverviewChart" role="img" aria-label="Blood pressure and heart rate readings over time"></canvas>
+            <p id="healthChartEmpty" class="chart-empty">Add blood pressure and heart-rate readings in My Profile to see your health chart.</p>
+          </div>
+          <p class="chart-note">Only readings you enter are displayed. HealthMemory does not measure your health automatically.</p>
+        </div>
+
+        <div class="two-columns">
+          <div class="panel"><div class="panel-heading"><div><h3>Recent Medical Records</h3><p>Your latest saved records</p></div><button class="text-btn" data-go="records">View all</button></div><div id="recentRecords"></div></div>
+          <div class="panel"><div class="panel-heading"><div><h3>Upcoming Appointments</h3><p>Your scheduled visits</p></div><button class="text-btn" data-go="appointments">View all</button></div><div id="upcomingAppointments"></div></div>
+        </div>
+        <div class="panel"><div class="panel-heading"><div><h3>My Medicines</h3><p>Your saved medicine information</p></div><button class="text-btn" data-go="medicines">Manage</button></div><div id="dashboardMedicines"></div></div>
+      </section>
+
+      <!-- RECORDS -->
+      <section class="page" id="page-records">
+        <div class="section-intro"><div><h2>Medical Records</h2><p>Store and manage your medical documents.</p></div><button class="btn" id="newRecord">＋ Add Record</button></div>
+        <div class="panel form-panel hidden" id="recordPanel">
+          <div class="panel-heading"><h3 id="recordFormTitle">Add medical record</h3></div>
+          <form id="recordForm">
+            <input type="hidden" id="recordId">
+            <div class="form-grid">
+              <label>Record title<input id="recordTitle" required placeholder="e.g. Blood test report"></label>
+              <label>Record type<select id="recordType"><option>Lab Report</option><option>Prescription</option><option>Scan / Imaging</option><option>Discharge Summary</option><option>Vaccination</option><option>Other</option></select></label>
+              <label>Date<input type="date" id="recordDate" required></label>
+              <label>Doctor / Hospital<input id="recordDoctor" placeholder="Doctor or hospital name"></label>
+              <label class="full">Notes<textarea id="recordNotes" rows="3" placeholder="Additional details"></textarea></label>
+              <label class="full">Attachments<input type="file" id="recordAttachment" multiple accept="image/*,.pdf,.doc,.docx"></label>
+            </div>
+            <div id="recordFileList" class="file-list"></div>
+            <div class="form-actions"><button class="btn" type="submit">Save Record</button><button class="btn secondary" type="button" id="cancelRecord">Cancel</button><button class="text-btn" type="button" id="cancelRecord2">Close</button></div>
+          </form>
+        </div>
+        <div class="toolbar"><input id="recordSearch" placeholder="Search records..."><select id="recordFilter"><option value="">All record types</option><option>Lab Report</option><option>Prescription</option><option>Scan / Imaging</option><option>Discharge Summary</option><option>Vaccination</option><option>Other</option></select></div>
+        <div class="card-grid" id="recordsList"></div>
+      </section>
+
+      <!-- SCANNER -->
+      <section class="page" id="page-scanner">
+        <div class="section-intro"><div><h2>Document Scanner</h2><p>Capture documents with your camera or upload images and PDFs.</p></div></div>
+        <div class="panel">
+          <div class="camera-box">
+            <video id="cameraPreview" autoplay playsinline muted></video>
+            <div id="cameraPlaceholder" class="camera-placeholder"><span>▧</span><strong>Camera preview</strong><small>Start your camera to capture a document.</small></div>
+          </div>
+          <canvas id="cameraCanvas" hidden></canvas>
+          <div class="button-row">
+            <button class="btn" id="startCamera">Start Camera</button>
+            <button class="btn secondary" id="capturePhoto" disabled>Capture Photo</button>
+            <button class="btn secondary" id="stopCamera">Stop Camera</button>
+          </div>
+          <label class="upload-label">Upload document images or PDFs<input type="file" id="scanUpload" accept="image/*,application/pdf" multiple></label>
+        </div>
+        <div class="panel">
+          <div class="panel-heading"><div><h3>Scanned Pages</h3><p><span id="scanCount">0</span> page(s) added</p></div></div>
+          <div id="scanFiles" class="scan-list"></div>
+          <div class="form-actions"><button class="btn" id="downloadScan">Download PDF</button><button class="btn secondary" id="saveScanRecord">Save to Medical Records</button><button class="btn danger-btn" id="clearScan">Clear Pages</button></div>
+        </div>
+      </section>
+
+      <!-- MEDICINES -->
+      <section class="page" id="page-medicines">
+        <div class="section-intro"><div><h2>Medicines</h2><p>Keep your medicine details and schedules organized.</p></div><button class="btn" id="newMedicine">＋ Add Medicine</button></div>
+        <div class="panel hidden" id="medicinePanel">
+          <div class="panel-heading"><h3 id="medicineFormTitle">Add medicine</h3></div>
+          <form id="medicineForm">
+            <input type="hidden" id="medicineId">
+            <div class="form-grid">
+              <label>Medicine name<input id="medicineName" required></label>
+              <label>Strength / Dosage<input id="medicineStrength" placeholder="e.g. 500 mg"></label>
+              <label>Purpose<input id="medicinePurpose" placeholder="Reason for use"></label>
+              <label>Start date<input type="date" id="medicineStart"></label>
+              <label>Duration (days)<input type="number" id="medicineDuration" min="1"></label>
+              <label class="full">Instructions<textarea id="medicineInstructions" rows="2"></textarea></label>
+            </div>
+            <p class="field-title">Schedule</p>
+            <div class="check-row"><label><input type="checkbox" id="medicineMorning"> Morning</label><label><input type="checkbox" id="medicineAfternoon"> Afternoon</label><label><input type="checkbox" id="medicineEvening"> Evening</label><label><input type="checkbox" id="medicineNight"> Night</label></div>
+            <div class="form-actions"><button class="btn">Save Medicine</button><button class="btn secondary" type="button" id="cancelMedicine">Cancel</button><button class="text-btn" type="button" id="cancelMedicine2">Close</button></div>
+          </form>
+        </div>
+        <div class="toolbar"><input id="medicineSearch" placeholder="Search medicines..."></div>
+        <div class="card-grid" id="medicinesList"></div>
+      </section>
+
+      <!-- APPOINTMENTS -->
+      <section class="page" id="page-appointments">
+        <div class="section-intro"><div><h2>Appointments</h2><p>Manage your doctor visits and appointments.</p></div><button class="btn" id="newAppointment">＋ Add Appointment</button></div>
+        <div class="panel hidden" id="appointmentPanel">
+          <h3 id="appointmentFormTitle">Add appointment</h3>
+          <form id="appointmentForm"><input type="hidden" id="appointmentId">
+            <div class="form-grid">
+              <label>Doctor name<input id="appointmentDoctor" required></label>
+              <label>Specialty<input id="appointmentSpecialty"></label>
+              <label>Date<input type="date" id="appointmentDate" required></label>
+              <label>Time<input type="time" id="appointmentTime"></label>
+              <label>Location<input id="appointmentLocation"></label>
+              <label>Status<select id="appointmentStatus"><option>Upcoming</option><option>Completed</option><option>Cancelled</option></select></label>
+              <label class="full">Notes<textarea id="appointmentNotes" rows="2"></textarea></label>
+            </div>
+            <div class="form-actions"><button class="btn">Save Appointment</button><button class="btn secondary" type="button" id="cancelAppointment">Cancel</button><button class="text-btn" type="button" id="cancelAppointment2">Close</button></div>
+          </form>
+        </div>
+        <div class="card-grid" id="appointmentsList"></div>
+      </section>
+
+      <!-- FAMILY -->
+      <section class="page" id="page-family">
+        <div class="section-intro"><div><h2>Family Members</h2><p>Keep important family health details together.</p></div><button class="btn" id="newFamily">＋ Add Member</button></div>
+        <div class="panel hidden" id="familyPanel">
+          <h3 id="familyFormTitle">Add family member</h3>
+          <form id="familyForm"><input type="hidden" id="familyId">
+            <div class="form-grid">
+              <label>Name<input id="familyName" required></label>
+              <label>Relationship<input id="familyRelation"></label>
+              <label>Date of birth<input type="date" id="familyBirth"></label>
+              <label>Blood group<input id="familyBlood" placeholder="e.g. O+"></label>
+              <label class="full">Notes<textarea id="familyNotes" rows="2"></textarea></label>
+            </div>
+            <div class="form-actions"><button class="btn">Save Member</button><button class="btn secondary" type="button" id="cancelFamily">Cancel</button><button class="text-btn" type="button" id="cancelFamily2">Close</button></div>
+          </form>
+        </div>
+        <div class="card-grid" id="familyList"></div>
+      </section>
+
+      <!-- TIMELINE -->
+      <section class="page" id="page-timeline">
+        <div class="section-intro"><div><h2>Health Timeline</h2><p>A chronological overview of your saved health information.</p></div></div>
+        <div class="panel"><div id="timelineList" class="timeline"></div></div>
+      </section>
+
+      <!-- PROFILE -->
+      <section class="page" id="page-profile">
+        <div class="section-intro"><div><h2>My Profile</h2><p>Manage personal information and health readings.</p></div></div>
+        <div class="panel">
+          <h3>Personal Information</h3>
+          <form id="profileForm">
+            <div class="form-grid">
+              <label>Full name<input id="profileName"></label>
+              <label>Date of birth<input type="date" id="profileDOB"></label>
+              <label>Gender<select id="profileGender"><option value="">Select</option><option>Male</option><option>Female</option><option>Other</option><option>Prefer not to say</option></select></label>
+              <label>Blood group<input id="profileBlood" placeholder="e.g. B+"></label>
+              <label>Phone<input type="tel" id="profilePhone"></label>
+              <label>Email<input type="email" id="profileEmail"></label>
+              <label class="full">Address<textarea id="profileAddress" rows="2"></textarea></label>
+            </div>
+            <div class="form-actions"><button class="btn">Save Profile</button></div>
+          </form>
+        </div>
+
+        <div class="panel">
+          <div class="panel-heading"><div><h3>Health Readings</h3><p>Record blood pressure and heart rate measurements.</p></div></div>
+          <p class="notice">Enter readings from a trusted blood-pressure monitor or pulse measurement. HealthMemory does not measure these values.</p>
+          <form id="healthReadingForm">
+            <input type="hidden" id="healthReadingId">
+            <div class="form-grid">
+              <label>Systolic BP (mmHg)<input type="number" id="healthSystolic" min="70" max="250" required placeholder="e.g. 120"></label>
+              <label>Diastolic BP (mmHg)<input type="number" id="healthDiastolic" min="40" max="150" required placeholder="e.g. 80"></label>
+              <label>Heart rate (BPM)<input type="number" id="healthHeartRate" min="30" max="220" required placeholder="e.g. 72"></label>
+              <label>Reading date<input type="date" id="healthReadingDate" required></label>
+            </div>
+            <div class="form-actions"><button class="btn" id="saveHealthReading">Save Reading</button><button class="btn secondary" type="button" id="cancelHealthReading">Cancel Edit</button></div>
+          </form>
+          <div id="healthReadingsList" class="health-reading-list"></div>
+        </div>
+
+        <div class="panel">
+          <h3>Emergency Information</h3>
+          <form id="emergencyForm">
+            <div class="form-grid">
+              <label>Emergency contact name<input id="emergencyName"></label>
+              <label>Emergency contact phone<input id="emergencyPhone" type="tel"></label>
+              <label>Allergies<textarea id="emergencyAllergies" rows="2"></textarea></label>
+              <label>Medical conditions<textarea id="emergencyConditions" rows="2"></textarea></label>
+              <label class="full">Additional notes<textarea id="emergencyNotes" rows="2"></textarea></label>
+            </div>
+            <div class="form-actions"><button class="btn">Save Emergency Information</button></div>
+          </form>
+        </div>
+      </section>
+
+      <!-- SETTINGS -->
+      <section class="page" id="page-settings">
+        <div class="section-intro"><div><h2>Settings & Backup</h2><p>Manage your saved data and browser storage.</p></div></div>
+        <div class="panel"><h3>Backup and Restore</h3><p>Export your data and attachments into a backup file.</p>
+          <div class="button-row"><button class="btn" id="exportBackup">↓ Export Backup</button><label class="btn secondary import-button">↑ Import Backup<input type="file" id="importBackup" accept=".json,application/json" hidden></label></div>
+        </div>
+        <div class="panel"><div class="panel-heading"><h3>Storage Information</h3><button class="btn secondary" id="refreshStorage">Refresh</button></div><div id="storageInfo" class="storage-grid"></div></div>
+        <div class="panel danger-panel"><h3>Delete All Data</h3><p>Permanently remove your saved records, medicines, appointments, family details, readings and attachments.</p><button class="btn danger-btn" id="deleteAll">Delete All Data</button></div>
+      </section>
+    </div>
+
+    <footer>Your health information, organized privately.</footer>
+  </main>
+</div>
+
+<!-- FILE VIEWER -->
+<div class="modal" id="viewerModal">
+  <div class="modal-box">
+    <div class="panel-heading"><h3 id="viewerTitle">Attachment</h3><button class="icon-btn" id="closeViewer">×</button></div>
+    <div id="viewerContent" class="viewer-content"></div>
+    <div class="form-actions"><a id="viewerDownload" class="btn" style="display:none">Download</a><button class="btn secondary" id="closeViewer2">Close</button></div>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
